@@ -1,6 +1,8 @@
 from selenium import webdriver
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
+
+#TODO: Implement auto. cookie grab
 browser = webdriver.Edge(EdgeChromiumDriverManager().install())
 
 browser.get("https://proxer.me/login")

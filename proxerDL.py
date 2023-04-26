@@ -3,16 +3,17 @@ import json
 import re
 import requests
 import os
+import urllib
+from loguru import logger
 from tqdm import tqdm
 from bs4 import BeautifulSoup
-import urllib
 
 
 class proxerDL:
     
     def __init__(self) -> None:
        
-        self.cookies = {'proxer_loggedin':'true', 'joomla_user_state':'logged_in', 'XSRF-TOKEN':'eyJpdiI6Imh3cDVTbktsa2RLU0lqZHN2TWtzOVE9PSIsInZhbHVlIjoiK05sXC9NMFQ2VXdWbWR2YkZCcXdZRHBpUkJXZ092UWMzanlNaGdZZ1dLbWZcL1JsT1wvUXp5bWt5QkFEajNBXC9PVm0iLCJtYWMiOiIyYmVhNTU5ODUwYmMzZmQwNTllMzE5OTM4ZmU5OGZhNzE1ZGViZWIzZmIzOGI5YjBkNTA1YjMyMzcxMTdiZGYwIn0%3D', 'proxer_player_session':'eyJpdiI6InRBR3pPNzYzbVhvTUdNaTJ1Tmp5a0E9PSIsInZhbHVlIjoia2tcL25zQWFhMFM4T1Y3UjN3ZDVBM1UzeEJ4ZGVQeTZnbVA3VUJYcldEc0phYkZQbGtLSFRxQ0VSNU1ldXRkYVkiLCJtYWMiOiIyYTQyNmZhYzY2NDEwY2U4OWIxYzM4NzM3N2UwNmEyMWQ1MzQxNzEzNTdjYTcyZjg2ZTc5NjY1YTM3ODcxYWJiIn0%3D', 'CookieScriptConsent':'{"action":"reject","categories":"[]","CMP":"CPnub35Pnub35F2ADBENCaCgAAAAAAAAAAAAAAAAAAAA.YAAAAAAAAAAA","key":"b29ca758-3105-4fde-a46e-6fb840e3e277"}', 'e0da4f913f5f05ed7a3f6dc5f0488c7b':'7tjktjvhurce0bicbbl04o9j7k', 'stream_choose':'proxer-stream', 'tmode':'ht', 'joomla_remember_me_0109a16d4ebeb98d2073bff41fd9c5dd':'9QjxjlGu1CLNOMxa.LcCKzlQfflZWiOsgeb2k', 'style':'gray', 'stream_donatecall3':'1', 'default_design':'gray', 'joomla_remember_me_0c0d7e49ef22a3e1275ace60581e72ff':'484IoNJwWxFK44P2.Ndnnkf7X1Yn0zgC0iO74'}
+        self.cookies = {'proxer_loggedin':'true', 'joomla_user_state':'logged_in', 'XSRF-TOKEN':'eyJpdiI6Imh3cDVTbktsa2RLU0lqZHN2TWtzOVE9PSIsInZhbHVlIjoiK05sXC9NMFQ2VXdWbWR2YkZCcXdZRHBpUkJXZ092UWMzanlNaGdZZ1dLbWZcL1JsT1wvUXp5bWt5QkFEajNBXC9PVm0iLCJtYWMiOiIyYmVhNTU5ODUwYmMzZmQwNTllMzE5OTM4ZmU5OGZhNzE1ZGViZWIzZmIzOGI5YjBkNTA1YjMyMzcxMTdiZGYwIn0%3D', 'proxer_player_session':'eyJpdiI6InRBR3pPNzYzbVhvTUdNaTJ1Tmp5a0E9PSIsInZhbHVlIjoia2tcL25zQWFhMFM4T1Y3UjN3ZDVBM1UzeEJ4ZGVQeTZnbVA3VUJYcldEc0phYkZQbGtLSFRxQ0VSNU1ldXRkYVkiLCJtYWMiOiIyYTQyNmZhYzY2NDEwY2U4OWIxYzM4NzM3N2UwNmEyMWQ1MzQxNzEzNTdjYTcyZjg2ZTc5NjY1YTM3ODcxYWJiIn0%3D', 'CookieScriptConsent':'{"action":"reject","categories":"[]","CMP":"CPnub35Pnub35F2ADBENCaCgAAAAAAAAAAAAAAAAAAAA.YAAAAAAAAAAA","key":"b29ca758-3105-4fde-a46e-6fb840e3e277"}', 'e0da4f913f5f05ed7a3f6dc5f0488c7b':'dbed0dr4l5nc5b5kllqqg49qtd', 'stream_choose':'proxer-stream', 'tmode':'ht', 'joomla_remember_me_0109a16d4ebeb98d2073bff41fd9c5dd':'9QjxjlGu1CLNOMxa.LcCKzlQfflZWiOsgeb2k', 'style':'gray', 'stream_donatecall3':'1', 'default_design':'gray', 'joomla_remember_me_0c0d7e49ef22a3e1275ace60581e72ff':'484IoNJwWxFK44P2.Ndnnkf7X1Yn0zgC0iO74'}
         coockieConsent = {"action":"reject","categories":"[]","CMP":"CPpalVSPpalVSF2ADBENCaCgAAAAAAAAAAAAAAAAAAAA.YAAAAAAAAAAA","key":"6fa4718a-c72a-4da9-a357-231cdf252463"}
         json_coockie = json.dumps(coockieConsent)
         #self.cookies = {'proxer_loggedin':'true', 'joomla_user_state':'logged_in', 'e0da4f913f5f05ed7a3f6dc5f0488c7b':'fup0j35noesb38l3ovpakgc0r4', 'CookieScriptConsent':json_coockie}
@@ -75,22 +76,23 @@ class proxerDL:
                 self.episode_name = self.episode_name.replace(":", "")
                 self.folderTitle = self.episode_name.replace(":", "")
                 self.episode_name = self.episode_name + " s01e" + str(episode)
-       # print(self.episode_name)
+ 
 
                 anime_id_data = str(data[5])
                 match = re.search(r'"code":"\w+"', anime_id_data)
                 
                 if match:
                     code_text = match.group()
-                    #print(f"Der Code-Text wurde gefunden: {code_text}")
+                  
                     self.anime_id = code_text.replace('"code":', '')
                     self.anime_id = self.anime_id.replace('"', "")
-                    #print(self.anime_id)
+                   
                 else:
-                    print("Kein Code-Text gefunden.")
-                    #print(match)
+                    logger.error("Kein Code-Text gefunden.")
+                   
+                   
             except:
-                print("You may have to Enter the Capcha to continue, please check your browser or wait 5 seconds and press any key")
+                logger.info("You may have to Enter the Capcha to continue, please check your browser or wait 5 seconds and press any key")
                 input()
                 continue
             break
@@ -114,7 +116,8 @@ class proxerDL:
        soup = BeautifulSoup(r.content, "html.parser")
        mydivs = soup.find_all("tr")
        amount = len(mydivs) - 1
-       print("Anzahl der Folgen: " + str(amount))
+       logger.success("Anzahl der Folgen: " + str(amount))
+       
        
        
        return amount
@@ -151,17 +154,10 @@ class proxerDL:
                         return code_text
 
             except:
-                print("Error getting Payload. Wait a few seconds and then press any key")
+                logger.error("Error getting Payload. Wait a few seconds and then press any key")
                 input()
                 continue
             break
-
-
-                
-       
-      
-
-
 
 
 if __name__ == "__main__":
@@ -174,13 +170,7 @@ if __name__ == "__main__":
         downloadObj = proxerDL()
         downloadObj.bulk_download(args.id)
     else:
-        print("No Args provided! Please Enter -i with an Anime ID")
+        logger.error("No Args provided! Please Enter -i with an Anime ID")
+
         
         
-        
-        
-        
-        # X-Plex-Token=UnfTg2my49m9TiE2Xe_i
-        
-        
-       #GET http://[IP address]:32400/library/sections/all/refresh?X-Plex-Token=[PlexToken]
