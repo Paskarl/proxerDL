@@ -31,7 +31,7 @@ if conn:
     conn.close()
     
 else:
-    print("Fehler bruder du weischt")
+    print("Fehler bei der Übertragung")
     
     
     
